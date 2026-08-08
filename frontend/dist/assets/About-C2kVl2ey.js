@@ -1,0 +1,1 @@
+import{m as e,t}from"./index-DcvpAPbc.js";e();var n=t(),r=()=>(0,n.jsxs)(`div`,{className:`max-w-3xl mx-auto`,children:[(0,n.jsx)(`h2`,{className:`text-2xl font-semibold mb-4`,children:`About`}),(0,n.jsx)(`p`,{className:`text-white/80`,children:`AI URL Shortener frontend prototype.`})]});export{r as default};
