@@ -29,6 +29,7 @@ app.use(errorHandler);
 const PORT = config.PORT;
 
 let server: any;
+console.log("first log");
 
 async function start() {
     try {
