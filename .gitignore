@@ -9,8 +9,10 @@ frontend/dist/
 
 # Environment variables
 .env
-frontend/.env
-backend/.env
+frontend/.env.prod
+frontend/.env.dev
+backend/.env.dev
+backend/.env.prod
 
 # Logs
 *.log
