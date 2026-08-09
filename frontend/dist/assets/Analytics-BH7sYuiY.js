@@ -1,1 +1,0 @@
-import{m as e,t}from"./index-DcvpAPbc.js";e();var n=t(),r=()=>(0,n.jsxs)(`div`,{className:`max-w-5xl mx-auto`,children:[(0,n.jsx)(`h2`,{className:`text-2xl font-semibold mb-4`,children:`Analytics`}),(0,n.jsx)(`p`,{className:`text-white/80`,children:`Analytics dashboard will be implemented in later steps.`})]});export{r as default};
