@@ -32,11 +32,13 @@ export async function signup(req: Request, res: Response, next: NextFunction) {
       throw new ApiError(400, 'Name, email, and password are required');
     }
     const user = await signupUser(name, email, password);
-    const accessToken = createAccessToken(user);
-    const refreshToken = createRefreshToken(user);
+    if(user){
+    const accessToken:string = createAccessToken(user)!;
+    const refreshToken:string = createRefreshToken(user)!;
     await storeRefreshToken(user.id, refreshToken);
     res.status(201);
     return sendTokens(res, accessToken, refreshToken);
+    }
   } catch (error) {
     next(error);
   }
@@ -49,8 +51,8 @@ export async function login(req: Request, res: Response, next: NextFunction) {
       throw new ApiError(400, 'Email and password are required');
     }
     const user = await loginUser(email, password);
-    const accessToken = createAccessToken(user);
-    const refreshToken = createRefreshToken(user);
+    const accessToken:string = createAccessToken(user)!;
+    const refreshToken:string = createRefreshToken(user)!;
     await storeRefreshToken(user.id, refreshToken);
     return sendTokens(res, accessToken, refreshToken);
   } catch (error) {
@@ -65,8 +67,8 @@ export async function refresh(req: Request, res: Response, next: NextFunction) {
       throw new ApiError(401, 'Refresh token missing');
     }
     const user = await validateRefreshToken(refreshToken);
-    const accessToken = createAccessToken(user);
-    const nextRefreshToken = createRefreshToken(user);
+    const accessToken = createAccessToken(user)!;
+    const nextRefreshToken = createRefreshToken(user)!;
     await storeRefreshToken(user.id, nextRefreshToken);
     res.status(200);
     return sendTokens(res, accessToken, nextRefreshToken);
@@ -117,8 +119,8 @@ export async function googleCallback(req: Request, res: Response, next: NextFunc
       throw new ApiError(400, 'Google authentication failed');
     }
     const user = await findOrCreateGoogleUser({ googleId, email, name });
-    const accessToken = createAccessToken(user);
-    const refreshToken = createRefreshToken(user);
+    const accessToken = createAccessToken(user)!;
+    const refreshToken = createRefreshToken(user)!;
     await storeRefreshToken(user.id, refreshToken);
     res.cookie(ACCESS_COOKIE_NAME, refreshToken, {
       httpOnly: true,

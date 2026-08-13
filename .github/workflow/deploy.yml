@@ -1,0 +1,153 @@
+name: Deploy URL Shortener
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # -------------------------
+      # Checkout repository
+      # -------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # -------------------------
+      # Setup SSH
+      # -------------------------
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.AWS_PRIVATE_KEY }}
+
+
+      # -------------------------
+      # Create production env
+      # -------------------------
+      - name: Create production env
+        env:
+          PROD_ENV: ${{ secrets.PROD_ENV }}
+        run: |
+          printf '%s\n' "$PROD_ENV" > .env.prod
+
+
+      # -------------------------
+      # Copy env to EC2
+      # -------------------------
+      - name: Copy environment file
+        env:
+          AWS_HOST: ${{ secrets.AWS_HOST }}
+          AWS_USERNAME: ${{ secrets.AWS_USERNAME }}
+        run: |
+
+          ssh -o StrictHostKeyChecking=no \
+            $AWS_USERNAME@$AWS_HOST \
+            "mkdir -p /home/ec2-user/urlshortner/backend"
+
+          scp -o StrictHostKeyChecking=no \
+            .env.prod \
+            $AWS_USERNAME@$AWS_HOST:/home/ec2-user/urlshortner/backend/.env.prod
+
+          rm .env.prod
+
+
+      # -------------------------
+      # Deploy Frontend + Backend
+      # -------------------------
+      - name: Deploy application
+        env:
+          AWS_HOST: ${{ secrets.AWS_HOST }}
+          AWS_USERNAME: ${{ secrets.AWS_USERNAME }}
+        run: |
+
+          ssh -o StrictHostKeyChecking=no \
+            $AWS_USERNAME@$AWS_HOST << 'EOF'
+
+            set -e
+
+            echo "Starting deployment..."
+
+            cd /home/ec2-user
+
+
+            # -------------------------
+            # Clone repository
+            # -------------------------
+
+            if [ ! -d "urlshortner/.git" ]; then
+
+              rm -rf urlshortner
+
+              git clone \
+                https://github.com/YOUR_USERNAME/urlshortner.git \
+                urlshortner
+
+            fi
+
+
+            # -------------------------
+            # Go to project
+            # -------------------------
+
+            cd /home/ec2-user/urlshortner
+
+
+            # -------------------------
+            # Get latest code
+            # -------------------------
+
+            git fetch origin main
+
+            git reset --hard origin/main
+
+
+            # -------------------------
+            # Build Frontend
+            # -------------------------
+
+            echo "Building frontend..."
+
+            docker compose build frontend
+
+
+            # -------------------------
+            # Build Backend
+            # -------------------------
+
+            echo "Building backend..."
+
+            docker compose build backend
+
+
+            # -------------------------
+            # Start both
+            # -------------------------
+
+            echo "Starting containers..."
+
+            docker compose up -d
+
+
+            # -------------------------
+            # Cleanup
+            # -------------------------
+
+            docker image prune -f
+
+
+            # -------------------------
+            # Show containers
+            # -------------------------
+
+            docker compose ps
+
+
+            echo "Deployment completed successfully!"
+
+          EOF

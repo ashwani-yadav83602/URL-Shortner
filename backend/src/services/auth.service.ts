@@ -1,13 +1,27 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import config from '../config/index.js';
 import { UserModel, IUser } from '../models/index.js';
 import ApiError from '../errors/ApiError.js';
 
-function signToken(userId: string, secret: string, expiresIn: string) {
-  return jwt.sign({ sub: userId }, secret, { expiresIn });
+// function signToken(userId: string, secret: string, expiresIn: string) {
+//   if(userId && secret && expiresIn){
+//   return jwt.sign({ sub: userId }, secret, { expiresIn });
+// }}
+function signToken(
+  userId: string,
+  secret: string,
+  expiresIn: SignOptions["expiresIn"]
+) {
+  if (userId && secret && expiresIn) {
+   const token:string= jwt.sign(
+      { sub: userId },
+      secret,
+      { expiresIn }
+    );
+    return token;
+  }
 }
-
 export async function signupUser(name: string, email: string, password: string) {
   const normalizedEmail = email.trim().toLowerCase();
   const existing = await UserModel.findOne({ email: normalizedEmail }).exec();
@@ -36,12 +50,14 @@ export async function loginUser(email: string, password: string) {
 }
 
 export function createAccessToken(user: IUser) {
+  if(user.id && config.JWT_SECRET && config.JWT_ACCESS_EXPIRES) {
   return signToken(user.id, config.JWT_SECRET, config.JWT_ACCESS_EXPIRES);
-}
+}}
 
 export function createRefreshToken(user: IUser) {
+   if(user.id && config.JWT_REFRESH_SECRET && config.JWT_REFRESH_EXPIRES) {
   return signToken(user.id, config.JWT_REFRESH_SECRET, config.JWT_REFRESH_EXPIRES);
-}
+}}
 
 export async function storeRefreshToken(userId: string, refreshToken: string) {
   await UserModel.findByIdAndUpdate(userId, { refreshToken }, { new: true }).exec();

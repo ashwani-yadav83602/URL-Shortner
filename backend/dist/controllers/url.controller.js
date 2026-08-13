@@ -4,6 +4,7 @@ export async function shorten(req, res, next) {
         const { url } = req.body;
         const doc = await urlService.shortenUrl(url);
         res.status(201).json({
+            id: doc._id || doc.id,
             originalUrl: doc.originalUrl,
             shortUrl: doc.shortUrl,
             shortCode: doc.shortCode,

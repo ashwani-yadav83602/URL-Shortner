@@ -1,0 +1,76 @@
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import config from '../config/index.js';
+import { UserModel } from '../models/index.js';
+import ApiError from '../errors/ApiError.js';
+// function signToken(userId: string, secret: string, expiresIn: string) {
+//   if(userId && secret && expiresIn){
+//   return jwt.sign({ sub: userId }, secret, { expiresIn });
+// }}
+function signToken(userId, secret, expiresIn) {
+    if (userId && secret && expiresIn) {
+        const token = jwt.sign({ sub: userId }, secret, { expiresIn });
+        return token;
+    }
+}
+export async function signupUser(name, email, password) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const existing = await UserModel.findOne({ email: normalizedEmail }).exec();
+    if (existing) {
+        throw new ApiError(409, 'Email already exists');
+    }
+    const passwordHash = await bcrypt.hash(password, 12);
+    const user = await UserModel.create({ name: name.trim(), email: normalizedEmail, passwordHash });
+    return user;
+}
+export async function loginUser(email, password) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await UserModel.findOne({ email: normalizedEmail }).exec();
+    if (!user || !user.passwordHash) {
+        throw new ApiError(401, 'Invalid credentials');
+    }
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid) {
+        throw new ApiError(401, 'Invalid credentials');
+    }
+    return user;
+}
+export function createAccessToken(user) {
+    if (user.id && config.JWT_SECRET && config.JWT_ACCESS_EXPIRES) {
+        return signToken(user.id, config.JWT_SECRET, config.JWT_ACCESS_EXPIRES);
+    }
+}
+export function createRefreshToken(user) {
+    if (user.id && config.JWT_REFRESH_SECRET && config.JWT_REFRESH_EXPIRES) {
+        return signToken(user.id, config.JWT_REFRESH_SECRET, config.JWT_REFRESH_EXPIRES);
+    }
+}
+export async function storeRefreshToken(userId, refreshToken) {
+    await UserModel.findByIdAndUpdate(userId, { refreshToken }, { new: true }).exec();
+}
+export async function revokeRefreshToken(userId) {
+    await UserModel.findByIdAndUpdate(userId, { refreshToken: null }, { new: true }).exec();
+}
+export async function validateRefreshToken(token) {
+    const payload = jwt.verify(token, config.JWT_REFRESH_SECRET);
+    const user = await UserModel.findById(payload.sub).exec();
+    if (!user || !user.refreshToken) {
+        throw new ApiError(401, 'Invalid refresh token');
+    }
+    if (user.refreshToken !== token) {
+        throw new ApiError(401, 'Refresh token mismatch');
+    }
+    return user;
+}
+export async function findOrCreateGoogleUser({ googleId, email, name }) {
+    const normalizedEmail = email.trim().toLowerCase();
+    let user = await UserModel.findOne({ email: normalizedEmail }).exec();
+    if (user) {
+        user.googleId = googleId;
+        user.name = name;
+        await user.save();
+        return user;
+    }
+    user = await UserModel.create({ googleId, email: normalizedEmail, name });
+    return user;
+}
