@@ -17,7 +17,7 @@ services:
       dockerfile: Dockerfile
     container_name: urlshortner-backend
     expose:
-      - "3000"
+      - "5000"
     env_file:
-      - ./backend/.env
+      - ./backend/.env.prod
     restart: unless-stopped
