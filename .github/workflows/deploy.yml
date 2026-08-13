@@ -48,7 +48,7 @@ jobs:
 
           ssh -o StrictHostKeyChecking=no \
             $AWS_USERNAME@$AWS_HOST \
-            "mkdir -p /home/ec2-user/urlshortner/backend"
+            "mkdir -p /home/ec2-user/url-shortner/backend"
 
           scp -o StrictHostKeyChecking=no \
             .env.prod \
@@ -85,9 +85,8 @@ jobs:
               rm -rf urlshortner
 
               git clone \
-                https://github.com/YOUR_USERNAME/urlshortner.git \
-                urlshortner
-
+                https://github.com/YOUR_USERNAME/URL-shortner.git\
+      
             fi
 
 
