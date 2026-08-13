@@ -81,6 +81,7 @@ async function shutdown() {
         console.error('Error during DB disconnect', e);
     }
     process.exit(0);
+    
 }
 
 process.on('SIGINT', shutdown);
