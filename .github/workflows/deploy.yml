@@ -52,7 +52,7 @@ jobs:
 
           scp -o StrictHostKeyChecking=no \
             .env.prod \
-            $AWS_USERNAME@$AWS_HOST:/home/ec2-user/urlshortner/backend/.env.prod
+            $AWS_USERNAME@$AWS_HOST:/home/ec2-user/url-shortner/backend/.env.prod
 
           rm .env.prod
 
@@ -77,16 +77,15 @@ jobs:
 
 
             # -------------------------
-            # Clone repository
+            # Clone repository (only if not already a git repo)
             # -------------------------
 
-            if [ ! -d "urlshortner/.git" ]; then
+            if [ ! -d "url-shortner/.git" ]; then
 
-              rm -rf urlshortner
+              rm -rf url-shortner
 
-              git clone \
-                https://github.com/YOUR_USERNAME/URL-shortner.git\
-      
+              git clone https://github.com/ashwani-yadav83602/URL-Shortner.git url-shortner
+
             fi
 
 
@@ -94,7 +93,7 @@ jobs:
             # Go to project
             # -------------------------
 
-            cd /home/ec2-user/urlshortner
+            cd /home/ec2-user/url-shortner
 
 
             # -------------------------
